@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shopping Cart - Men's Fashion Store</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fafafa;
+    }
+    header {
+      background-color: #ff4081;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+    .cart-item span {
+      flex: 1;
+    }
+    .remove-button {
+      background-color: #ff4081;
+      border: none;
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-left: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    .remove-button:hover {
+      background-color: #e73370;
+    }
+    .cart-total {
+      font-weight: bold;
+      text-align: right;
+      margin-top: 1rem;
+      font-size: 1.3rem;
+      color: #333;
+    }
+    .payment-section {
+      margin-top: 2rem;
+    }
+    .payment-section h3 {
+      margin-bottom: 0.5rem;
+      color: #ff4081;
+    }
+    .payment-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .payment-option {
+      flex: 1 1 120px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      padding: 0.5rem;
+      cursor: pointer;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: border-color 0.3s ease;
+      user-select: none;
+    }
+    .payment-option.selected {
+      border-color: #ff4081;
+      background: #ffe6f0;
+    }
+    .payment-option:hover {
+      background: #ffe6f0;
+    }
+    .qr-code-container {
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .qr-code-container canvas {
+      max-width: 200px;
+      max-height: 200px;
+      margin: 0 auto;
+    }
+    .checkout-button {
+      background-color: #ff4081;
+      border: none;
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      display: block;
+      margin: 1rem auto 0;
+      animation: buttonFadeIn 0.5s ease forwards;
+    }
+    .checkout-button:hover:not(:disabled) {
+      transform: scale(1.05);
+      animation: buttonPulse 0.3s ease;
+    }
+    .checkout-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .delivery-info {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: #333;
+      text-align: center;
+      font-weight: bold;
+    }
+    .empty-cart {
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.2rem;
+      color: #666;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 1rem;
+      color: #ff4081;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 90vw;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-align: center;
+      position: relative;
+    }
+    .modal-content img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .modal-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+    }
+    .modal-close:hover {
+      color: #ff4081;
+    }
+    .buy-button {
+      background-color: #ff4081;
+      border: none;
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      margin-top: 1rem;
+    }
+    .buy-button:hover {
+      background-color: #e73370;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>Shopping Cart - Men's Fashion Store</header>
+    <main>
+      <section v-if="cart.length > 0">
+        <div
+          class="cart-item"
+          v-for="item in cart"
+          :key="item.product.id"
+          @click="openProductDetail(item.product)"
+        >
+          <span>{{ item.product.name }} (x{{ item.quantity }})</span>
+          <span>\${{ (item.product.price * item.quantity).toFixed(2) }}</span>
+          <button class="remove-button" @click.stop="removeFromCart(item.product.id)">Remove</button>
+        </div>
+        <div class="cart-total">Total: \${{ cartTotal.toFixed(2) }}</div>
+
+        <div v-if="showPaymentOptions" class="payment-section">
+          <h3>Select Payment Method</h3>
+          <div class="payment-options">
+            <div
+              v-for="method in paymentMethods"
+              :key="method.id"
+              class="payment-option"
+              :class="{ selected: selectedPayment && selectedPayment.id === method.id }"
+              @click="selectPayment(method)"
+            >
+              {{ method.name }}
+            </div>
+          </div>
+          <button
+            v-if="selectedPayment && selectedPayment.name !== 'Cash on Delivery'"
+            class="checkout-button"
+            :disabled="!selectedPayment"
+            @click="generateQRCode"
+          >
+            Generate QR Code
+          </button>
+          <div v-if="selectedPayment && selectedPayment.name === 'Cash on Delivery'" class="delivery-info">
+            Estimated delivery time: 3-5 business days
+          </div>
+          <div class="qr-code-container" v-if="qrCodeData">
+            <canvas ref="qrCanvas"></canvas>
+            <p>Scan this QR code to pay with {{ selectedPayment.name }}</p>
+          </div>
+        </div>
+      </section>
+      <section v-else class="empty-cart">
+        Your cart is empty.
+      </section>
+      <a href="index.html" class="back-link">← Continue Shopping</a>
+
+      <!-- Product Detail Modal -->
+      <div v-if="showProductModal" class="modal-overlay" @click.self="closeProductDetail">
+        <div class="modal-content">
+          <button class="modal-close" @click="closeProductDetail">&times;</button>
+          <h2>{{ selectedProduct.name }}</h2>
+          <img :src="selectedProduct.image" :alt="selectedProduct.name" />
+          <p>Price: \${{ selectedProduct.price.toFixed(2) }}</p>
+          <button class="buy-button" @click="showPaymentOptions = true; closeProductDetail()">Buy</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          cart: [],
+          paymentMethods: [
+            { id: 1, name: 'Bank of America' },
+            { id: 2, name: 'Chase Bank' },
+            { id: 3, name: 'Wells Fargo' },
+            { id: 4, name: 'Citibank' },
+            { id: 5, name: 'US Bank' },
+            { id: 6, name: 'PNC Bank' },
+            { id: 7, name: 'Capital One' },
+            { id: 8, name: 'TD Bank' },
+            { id: 9, name: 'BB&T' },
+            { id: 10, name: 'SunTrust Bank' },
+            { id: 11, name: 'PhonePe' },
+            { id: 12, name: 'Google Pay' },
+            { id: 13, name: 'Debit Card' },
+            { id: 14, name: 'Cash on Delivery' }
+          ],
+          selectedPayment: null,
+          qrCodeData: '',
+          showProductModal: false,
+          selectedProduct: null,
+          showPaymentOptions: false,
+        };
+      },
+      computed: {
+        cartTotal() {
+          return this.cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
+        }
+      },
+      methods: {
+        openProductDetail(product) {
+          this.selectedProduct = product;
+          this.showProductModal = true;
+          this.showPaymentOptions = false;
+          this.selectedPayment = null;
+          this.qrCodeData = '';
+        },
+        closeProductDetail() {
+          this.showProductModal = false;
+        },
+        selectPayment(method) {
+          this.selectedPayment = method;
+          this.qrCodeData = '';
+        },
+        generateQRCode() {
+          if (!this.selectedPayment) return;
+          const paymentInfo = `Pay $${this.cartTotal.toFixed(2)} via ${this.selectedPayment.name}`;
+          this.qrCodeData = paymentInfo;
+          this.$nextTick(() => {
+            const canvas = this.$refs.qrCanvas;
+            QRCode.toCanvas(canvas, this.qrCodeData, { width: 200 }, function (error) {
+              if (error) console.error(error);
+            });
+          });
+        },
+        loadCart() {
+          const cartData = localStorage.getItem('cart');
+          if (cartData) {
+            this.cart = JSON.parse(cartData);
+          }
+        },
+        saveCart() {
+          localStorage.setItem('cart', JSON.stringify(this.cart));
+        },
+        removeFromCart(productId) {
+          this.cart = this.cart.filter(item => item.product.id !== productId);
+          this.saveCart();
+        }
+      },
+      mounted() {
+        this.loadCart();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
