@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Men's Fashion E-commerce Store</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fafafa;
+    }
+    header {
+      background-color: #ff4081;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      position: relative;
+    }
+    .search-cart-container {
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .search-bar input {
+      width: 300px;
+      max-width: 90vw;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+    .cart-button {
+      background: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ff4081;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+    }
+    .cart-button:hover {
+      background-color: #ffe6f0;
+    }
+    main {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+    .product-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+    .product-card img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+    }
+    .product-card h3 {
+      margin: 0.5rem 0;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    .product-card p {
+      margin: 0.25rem 0 1rem;
+      color: #666;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .buy-button, .add-to-cart-button {
+      background-color: #ffb6c1;
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      transition: background-color 0.4s ease, box-shadow 0.4s ease;
+      width: 100%;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+      animation: buttonPulse 2s infinite;
+    }
+    .buy-button:hover, .add-to-cart-button:hover {
+      background-color: #ff99aa;
+      box-shadow: 0 0 8px #ff99aa;
+      animation: none;
+    }
+    @keyframes buttonPulse {
+      0% {
+        box-shadow: 0 0 0 rgba(231, 51, 112, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 12px rgba(231, 51, 112, 1);
+      }
+      100% {
+        box-shadow: 0 0 0 rgba(231, 51, 112, 0.7);
+      }
+    }
+    /* Payment modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 90vw;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-align: center;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+    }
+    .modal-close:hover {
+      color: #ff4081;
+    }
+    .payment-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      justify-content: center;
+    }
+    .payment-option {
+      flex: 1 1 120px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      padding: 0.5rem;
+      cursor: pointer;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: border-color 0.3s ease;
+      user-select: none;
+    }
+    .payment-option.selected {
+      border-color: #ff4081;
+      background: #ffe6f0;
+    }
+    .payment-option:hover {
+      background: #ffe6f0;
+    }
+    .checkout-button {
+      background-color: #ff4081;
+      border: none;
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      margin-top: 1rem;
+    }
+    .checkout-button:hover:not(:disabled) {
+      transform: scale(1.05);
+      animation: buttonPulse 0.3s ease;
+    }
+    .checkout-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .qr-code-container {
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .qr-code-container canvas {
+      max-width: 200px;
+      max-height: 200px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      Men's Fashion E-commerce Store
+      <div class="search-cart-container">
+        <div class="search-bar">
+          <input type="text" v-model="searchQuery" placeholder="Search products..." />
+        </div>
+        <a href="cart.html" class="cart-button" :aria-label="'View cart with ' + cart.length + ' items'">
+          🛒
+          <span v-if="cart.length > 0" style="margin-left: 4px; font-weight: bold;">{{ cart.length }}</span>
+        </a>
+      </div>
+    </header>
+    <main>
+      <section class="products">
+        <div class="product-card" v-for="product in filteredProducts" :key="product.id">
+          <img :src="product.image" :alt="product.name" />
+          <h3>{{ product.name }}</h3>
+          <button class="buy-button" @click="openPaymentModal(product)">Buy</button>
+          <button class="add-to-cart-button" @click="addToCart(product)">Add to Cart</button>
+        </div>
+      </section>
+
+      <!-- Payment Modal -->
+      <div v-if="showPaymentModal" class="modal-overlay" @click.self="closePaymentModal">
+        <div class="modal-content">
+          <button class="modal-close" @click="closePaymentModal">&times;</button>
+          <h2>Payment Options for {{ selectedProduct.name }}</h2>
+          <div class="payment-options">
+            <div
+              v-for="method in paymentMethods"
+              :key="method.id"
+              class="payment-option"
+              :class="{ selected: selectedPayment && selectedPayment.id === method.id }"
+              @click="selectPayment(method)"
+            >
+              {{ method.name }}
+            </div>
+          </div>
+          <button
+            v-if="selectedPayment && selectedPayment.name !== 'Cash on Delivery'"
+            class="checkout-button"
+            :disabled="!selectedPayment"
+            @click="generateQRCode"
+          >
+            Generate QR Code
+          </button>
+          <div v-if="selectedPayment && selectedPayment.name === 'Cash on Delivery'" class="delivery-info">
+            Estimated delivery time: 3-5 business days
+          </div>
+          <div class="qr-code-container" v-if="qrCodeData">
+            <canvas ref="qrCanvas"></canvas>
+            <p>Scan this QR code to pay with {{ selectedPayment.name }}</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          searchQuery: '',
+          cart: [],
+          paymentMethods: [
+            { id: 1, name: 'Bank of America' },
+            { id: 2, name: 'Chase Bank' },
+            { id: 3, name: 'Wells Fargo' },
+            { id: 4, name: 'Citibank' },
+            { id: 5, name: 'US Bank' },
+            { id: 6, name: 'PNC Bank' },
+            { id: 7, name: 'Capital One' },
+            { id: 8, name: 'TD Bank' },
+            { id: 9, name: 'BB&T' },
+            { id: 10, name: 'SunTrust Bank' },
+            { id: 11, name: 'PhonePe' },
+            { id: 12, name: 'Google Pay' },
+            { id: 13, name: 'Debit Card' },
+            { id: 14, name: 'Cash on Delivery' }
+          ],
+          selectedPayment: null,
+          qrCodeData: '',
+          showPaymentModal: false,
+          selectedProduct: null,
+        };
+      },
+      computed: {
+        filteredProducts() {
+          const query = this.searchQuery.trim().toLowerCase();
+          if (!query) {
+            return this.products;
+          }
+          return this.products.filter(product =>
+            product.name.toLowerCase().includes(query)
+          );
+        },
+        products() {
+          return [
+            { id: 1, name: 'Men\'s Red Dress Shirt', price: 79.99, image: 'https://images.unsplash.com/photo-1520962918690-0a7a7a7a7a7a?auto=format&fit=crop&w=400&q=80' },
+            { id: 2, name: 'Men\'s Blue Jeans', price: 49.99, image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80' },
+            { id: 3, name: 'Men\'s Leather Jacket', price: 129.99, image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80' },
+            { id: 4, name: 'Men\'s Sneakers', price: 59.99, image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&w=400&q=80' },
+            { id: 5, name: 'Men\'s Handbag', price: 89.99, image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&w=400&q=80' },
+            { id: 6, name: 'Men\'s Sunglasses', price: 29.99, image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&w=400&q=80' },
+            { id: 7, name: 'Men\'s Wristwatch', price: 199.99, image: 'https://images.unsplash.com/photo-1519741491521-4a7a1a7a7a7a?auto=format&w=400&q=80' },
+            { id: 8, name: 'Men\'s Hat', price: 19.99, image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&w=400&q=80' },
+            { id: 9, name: 'Men\'s Scarf', price: 14.99, image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&w=400&q=80' },
+            { id: 10, name: 'Men\'s Belt', price: 24.99, image: 'https://images.unsplash.com/photo-1520962918690-0a7a7a7a7a7a?auto=format&w=400&q=80' }
+          ];
+        }
+      },
+      methods: {
+        addToCart(product) {
+          const cartItem = this.cart.find(item => item.product.id === product.id);
+          if (cartItem) {
+            cartItem.quantity++;
+          } else {
+            this.cart.push({ product, quantity: 1 });
+          }
+          this.saveCart();
+        },
+        saveCart() {
+          localStorage.setItem('cart', JSON.stringify(this.cart));
+        },
+        loadCart() {
+          const cartData = localStorage.getItem('cart');
+          if (cartData) {
+            this.cart = JSON.parse(cartData);
+          }
+        },
+        openPaymentModal(product) {
+          this.selectedProduct = product;
+          this.showPaymentModal = true;
+          this.selectedPayment = null;
+          this.qrCodeData = '';
+        },
+        closePaymentModal() {
+          this.showPaymentModal = false;
+        },
+        selectPayment(method) {
+          this.selectedPayment = method;
+          this.qrCodeData = '';
+        },
+        generateQRCode() {
+          if (!this.selectedPayment) return;
+          const paymentInfo = `Pay $${this.selectedProduct.price.toFixed(2)} via ${this.selectedPayment.name}`;
+          this.qrCodeData = paymentInfo;
+          this.$nextTick(() => {
+            const canvas = this.$refs.qrCanvas;
+            QRCode.toCanvas(canvas, this.qrCodeData, { width: 200 }, function (error) {
+              if (error) console.error(error);
+            });
+          });
+        }
+      },
+      mounted() {
+        this.loadCart();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
